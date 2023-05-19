@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id : wordCounter
+          uri: http://localhost:8080
+          predicates:
+            - Path= /word-counter/**
+            - Method=GET,POST,PUT,DELETE
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: WordCounterCB
+                fallbackUri: forward:/fallback/wordCounterFallback
+
+
+resilience4j:
+  CircuitBreaker:
+    configs:
+      default:
+        #registerHealthIndicator: true
+        ringBufferSizeInClosedState: 10
+        ringBufferSizeInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenStateMillis: 2000
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+    instances:
+      wordCounterCB:
+        baseConfig: default
+        ringBufferSizeInClosedState: 5
